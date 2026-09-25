@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
         name = "jwtAuth",
         type = SecuritySchemeType.HTTP,
         scheme = "bearer",
-        bearerFormat = "Authorization"
+        bearerFormat = "JWT"
 )
 @OpenAPIDefinition(
         info = @Info(
