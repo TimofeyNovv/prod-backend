@@ -1,4 +1,4 @@
-package ru.exmaple.prodbackend;
+package ru.example.prodbackend;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.boot.SpringApplication;
@@ -11,7 +11,13 @@ public class ProdBackendApplication {
         Dotenv dotenv = Dotenv.configure()
                 .ignoreIfMissing()
                 .load();
-        dotenv.entries().forEach(e -> System.setProperty(e.getKey(), e.getValue()));
+
+        dotenv.entries().forEach(e -> {
+            if (System.getenv(e.getKey()) == null
+                    && System.getProperty(e.getKey()) == null) {
+                System.setProperty(e.getKey(), e.getValue());
+            }
+        });
 
         SpringApplication.run(ProdBackendApplication.class, args);
     }

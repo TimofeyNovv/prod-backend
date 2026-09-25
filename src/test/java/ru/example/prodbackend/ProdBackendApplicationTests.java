@@ -1,4 +1,4 @@
-package ru.exmaple.prodbackend;
+package ru.example.prodbackend;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

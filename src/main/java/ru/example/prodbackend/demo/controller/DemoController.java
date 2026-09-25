@@ -1,4 +1,4 @@
-package ru.exmaple.prodbackend.demo.controller;
+package ru.example.prodbackend.demo.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +16,7 @@ public class DemoController {
             summary = "ping pong"
     )
     @GetMapping("/ping")
-    public ResponseEntity<?> ping(){
+    public ResponseEntity<String> ping(){
         return ResponseEntity.ok("pong");
     }
 }
