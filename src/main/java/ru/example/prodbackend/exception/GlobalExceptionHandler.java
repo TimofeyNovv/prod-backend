@@ -127,4 +127,21 @@ public class GlobalExceptionHandler {
                 .status(duplicate ? HttpStatus.CONFLICT : HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(body);
     }
+
+    @ExceptionHandler(RefreshTokenException.class)
+    public ResponseEntity<ErrorResponse> handleRefreshTokenException(
+            RefreshTokenException exception
+    ) {
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .code("INVALID_REFRESH_TOKEN")
+                .message("Refresh token is invalid or expired")
+                .traceId(UUID.randomUUID())
+                .time(Instant.now())
+                .build();
+
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(errorResponse);
+    }
+
 }

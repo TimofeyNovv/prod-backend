@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.example.prodbackend.auth.dto.AuthenticationRequest;
 import ru.example.prodbackend.auth.dto.AuthenticationResponse;
 import ru.example.prodbackend.auth.dto.RegisterRequest;
+import ru.example.prodbackend.auth.dto.refresh.RefreshTokenRequest;
 import ru.example.prodbackend.exception.UserAlreadyExistsException;
 import ru.example.prodbackend.exception.UserNotFoundException;
 import ru.example.prodbackend.user.entity.UserEntity;
@@ -20,6 +21,7 @@ import ru.example.prodbackend.user.repository.UserRepository;
 public class AuthenticationService {
 
     private final UserRepository userRepository;
+    private final RefreshTokenService refreshTokenService;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
@@ -41,9 +43,11 @@ public class AuthenticationService {
 
         return AuthenticationResponse.builder()
                 .accessToken(jwtService.generateToken(user))
+                .refreshToken(refreshTokenService.createRefreshToken(user))
                 .build();
     }
 
+    @Transactional
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
 
         authenticationManager.authenticate(
@@ -55,9 +59,37 @@ public class AuthenticationService {
         UserEntity user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new UserNotFoundException("user with email - " + request.getEmail() + " not found"));
 
+
         return AuthenticationResponse.builder()
                 .accessToken(jwtService.generateToken(user))
-                .refresh_token("null")
+                .refreshToken(refreshTokenService.createRefreshToken(user))
                 .build();
     }
+
+    @Transactional
+    public AuthenticationResponse updateTokens(RefreshTokenRequest request) {
+        String rawToken = request.getRefreshToken();
+        UserEntity user = refreshTokenService.getUserByRefreshToken(rawToken);
+
+        String accessToken = jwtService.generateToken(user);
+        String refreshToken = refreshTokenService.rotateRefreshToken(rawToken);
+
+        return AuthenticationResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
+    }
+
+    @Transactional
+    public void logout(RefreshTokenRequest request) {
+        refreshTokenService.revokeRefreshToken(request.getRefreshToken());
+    }
+
+    @Transactional
+    public void logoutAll(RefreshTokenRequest request) {
+        UserEntity user = refreshTokenService.getUserByRefreshToken(request.getRefreshToken());
+        refreshTokenService.deleteAllByUser(user);
+    }
+
+
 }

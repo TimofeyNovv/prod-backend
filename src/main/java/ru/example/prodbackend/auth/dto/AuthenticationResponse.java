@@ -19,6 +19,6 @@ public class AuthenticationResponse {
 
     @Schema(description = "refresh_token, обрати внимание, что я всегда в ответе пишу через нижний слеш")
     @JsonProperty("refresh_token")
-    private String refresh_token;
+    private String refreshToken;
 }
 
