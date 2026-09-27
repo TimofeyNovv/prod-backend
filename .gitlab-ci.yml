@@ -1,0 +1,56 @@
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - when: never
+
+stages:
+  - test
+
+test:
+  stage: test
+  image: maven:3.9-eclipse-temurin-17
+
+  tags:
+    - prod-backend
+
+  rules:
+    - when: on_success
+
+  variables:
+    DOCKER_HOST: unix:///var/run/docker.sock
+    TESTCONTAINERS_HOST_OVERRIDE: host.docker.internal
+    MAVEN_OPTS: "-Xmx512m"
+
+  cache:
+    key: maven-java17
+    paths:
+      - .m2/repository/
+
+  before_script:
+    - test -S /var/run/docker.sock
+    - getent hosts host.docker.internal
+
+  script:
+    - mvn -B -ntp -Dmaven.repo.local="$CI_PROJECT_DIR/.m2/repository" clean verify
+
+  artifacts:
+    when: always
+    expire_in: 7 days
+
+    paths:
+      - target/surefire-reports/
+      - target/failsafe-reports/
+      - target/site/jacoco-unit/
+      - target/site/jacoco-integration/
+      - target/site/jacoco/
+      - target/*.jar
+
+    reports:
+      junit:
+        - target/surefire-reports/TEST-*.xml
+        - target/failsafe-reports/TEST-*.xml
+
+      coverage_report:
+        coverage_format: jacoco
+        path: target/site/jacoco/jacoco.xml
