@@ -1,10 +1,7 @@
 package ru.example.prodbackend.user.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -17,6 +14,7 @@ import java.util.UUID;
 @Entity
 @Builder
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "users")
@@ -35,6 +33,12 @@ public class UserEntity implements UserDetails {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserRole role;
+
+    @Column(name = "first_name")
+    private String firstName;
+
+    @Column(name = "last_name")
+    private String lastName;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -69,5 +73,14 @@ public class UserEntity implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    public void updateProfile(String email, String firstName, String lastName) {
+        if (email != null)
+            this.email = email;
+        if (firstName != null)
+            this.firstName = firstName.isBlank() ? null : firstName;
+        if (lastName != null)
+            this.lastName = lastName.isBlank() ? null : lastName;
     }
 }

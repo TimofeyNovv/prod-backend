@@ -64,7 +64,7 @@ class SecurityIntegrationTest extends AuthIntegrationTestSupport {
         AuthenticationResponse tokens = readTokenPair(mockMvc.perform(post(endpoint)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + signedAccessToken(EMAIL, Instant.EPOCH))
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonMapper.writeValueAsString(Map.of("email", email, "password", PASSWORD)))));
+                .content(jsonMapper.writeValueAsString(Map.of("email", email, "password", PASSWORD, "first_name", "Alice", "last_name", "Smith")))));
 
         assertAccessTokenWorks(tokens.getAccessToken());
         assertEquals(2L, refreshTokenRepository.count());

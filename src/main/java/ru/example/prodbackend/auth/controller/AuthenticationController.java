@@ -8,6 +8,13 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import ru.example.prodbackend.user.entity.UserEntity;
+import ru.example.prodbackend.auth.dto.UpdateProfileRequest;
+import ru.example.prodbackend.auth.dto.UpdateProfileResponse;
+import ru.example.prodbackend.auth.dto.ChangePasswordRequest;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -16,7 +23,6 @@ import ru.example.prodbackend.auth.dto.AuthenticationResponse;
 import ru.example.prodbackend.auth.dto.RegisterRequest;
 import ru.example.prodbackend.auth.dto.refresh.RefreshTokenRequest;
 import ru.example.prodbackend.auth.service.AuthenticationService;
-import ru.example.prodbackend.auth.service.RefreshTokenService;
 import ru.example.prodbackend.exception.dto.ErrorResponse;
 
 @RestController
@@ -25,7 +31,6 @@ import ru.example.prodbackend.exception.dto.ErrorResponse;
 public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
-
 
     @Operation(
             summary = "регистрация пользователя",
@@ -113,6 +118,38 @@ public class AuthenticationController {
     ) {
         authenticationService.logoutAll(request);
 
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "редактирование профиля текущего пользователя",
+            description = "Изменяет email, имя и фамилию. При изменении email отзывает все refresh токены и возвращает новую пару; клиент должен сразу использовать новые токены.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Профиль обновлен", content = @Content(schema = @Schema(implementation = UpdateProfileResponse.class))),
+                    @ApiResponse(responseCode = "400", description = "Некорректное тело запроса", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    @ApiResponse(responseCode = "401", description = "Требуется действующий access токен", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    @ApiResponse(responseCode = "409", description = "Email уже занят", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    @ApiResponse(responseCode = "422", description = "Ошибка валидации", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            })
+    @SecurityRequirement(name = "jwtAuth")
+    @PatchMapping("/profile")
+    public ResponseEntity<UpdateProfileResponse> updateProfile(
+            @AuthenticationPrincipal UserEntity user, @Valid @RequestBody UpdateProfileRequest request) {
+        return ResponseEntity.ok(authenticationService.updateProfile(user, request));
+    }
+
+    @Operation(summary = "изменение пароля текущего пользователя",
+            description = "Проверяет текущий пароль и отзывает все refresh токены. Access токены сохраняются до истечения срока действия.",
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "Пароль изменен", content = @Content),
+                    @ApiResponse(responseCode = "400", description = "Некорректное тело запроса", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    @ApiResponse(responseCode = "401", description = "Некорректный access токен или текущий пароль", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    @ApiResponse(responseCode = "422", description = "Ошибка валидации", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            })
+    @SecurityRequirement(name = "jwtAuth")
+    @PostMapping("/change-password")
+    public ResponseEntity<Void> changePassword(
+            @AuthenticationPrincipal UserEntity user, @Valid @RequestBody ChangePasswordRequest request) {
+        authenticationService.changePassword(user, request);
         return ResponseEntity.noContent().build();
     }
 }

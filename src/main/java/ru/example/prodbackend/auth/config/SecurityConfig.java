@@ -35,7 +35,7 @@ public class SecurityConfig {
     @Bean
     public FilterRegistrationBean<JwtAuthenticationFilter>
     jwtFilterRegistration(JwtAuthenticationFilter filter) {
-        var registration = new FilterRegistrationBean<JwtAuthenticationFilter>(filter);
+        var registration = new FilterRegistrationBean<>(filter);
 
         registration.setEnabled(false);
         return registration;
@@ -45,7 +45,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(req ->
-                        req.requestMatchers("/docs",
+                        req.requestMatchers("/api/auth/profile", "/api/auth/change-password")
+                                .authenticated()
+                                .requestMatchers("/docs",
                                         "/api/demo/ping",
                                         "/api/auth/**",
                                         "/actuator/health",

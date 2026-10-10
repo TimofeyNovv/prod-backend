@@ -104,7 +104,7 @@ class UserProfileIntegrationTest extends AuthIntegrationTestSupport {
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", aMapWithSize(3)))
+                .andExpect(jsonPath("$", aMapWithSize(5)))
                 .andExpect(jsonPath("$.id").value(user.getId().toString()))
                 .andExpect(jsonPath("$.email").value(user.getEmail()))
                 .andExpect(jsonPath("$.role").value(user.getRole().name()));
