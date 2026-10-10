@@ -51,6 +51,8 @@ public abstract class AuthIntegrationTestSupport extends BaseIntegrationTest {
 
     protected AuthenticationResponse registerUser(String email) throws Exception {
         return readTokenPair(postJson(REGISTER_URL, RegisterRequest.builder()
+                        .firstName("Alice")
+                        .lastName("Smith")
                 .email(email)
                 .password(PASSWORD)
                 .build()));

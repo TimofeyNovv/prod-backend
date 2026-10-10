@@ -57,7 +57,7 @@ class AuthenticationServiceTest {
         when(jwtService.generateToken(any(UserEntity.class))).thenReturn(ACCESS_TOKEN);
         when(refreshTokenService.createRefreshToken(any(UserEntity.class))).thenReturn(REFRESH_TOKEN);
 
-        AuthenticationResponse response = authenticationService.register(new RegisterRequest(EMAIL, PASSWORD));
+        AuthenticationResponse response = authenticationService.register(RegisterRequest.builder().email(EMAIL).firstName("Alice").lastName("Smith").password(PASSWORD).build());
 
         ArgumentCaptor<UserEntity> userCaptor = ArgumentCaptor.forClass(UserEntity.class);
         var order = inOrder(userRepository, jwtService, refreshTokenService);
@@ -68,6 +68,8 @@ class AuthenticationServiceTest {
         order.verify(refreshTokenService).createRefreshToken(savedUser);
 
         assertEquals(EMAIL, savedUser.getUsername());
+        assertEquals("Alice", savedUser.getFirstName());
+        assertEquals("Smith", savedUser.getLastName());
         assertEquals(ENCODED_PASSWORD, savedUser.getPassword());
         assertEquals("USER", savedUser.getAuthorities().iterator().next().getAuthority());
         verify(passwordEncoder).encode(PASSWORD);
@@ -80,7 +82,7 @@ class AuthenticationServiceTest {
         when(userRepository.existsByEmail(EMAIL)).thenReturn(true);
 
         assertThrows(UserAlreadyExistsException.class,
-                () -> authenticationService.register(new RegisterRequest(EMAIL, PASSWORD)));
+                () -> authenticationService.register(RegisterRequest.builder().email(EMAIL).firstName("Alice").lastName("Smith").password(PASSWORD).build()));
 
         verify(userRepository).existsByEmail(EMAIL);
         verifyNoMoreInteractions(userRepository);

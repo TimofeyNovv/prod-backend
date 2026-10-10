@@ -16,7 +16,6 @@ import ru.example.prodbackend.auth.dto.AuthenticationResponse;
 import ru.example.prodbackend.auth.dto.RegisterRequest;
 import ru.example.prodbackend.auth.dto.refresh.RefreshTokenRequest;
 import ru.example.prodbackend.auth.service.AuthenticationService;
-import ru.example.prodbackend.auth.service.RefreshTokenService;
 import ru.example.prodbackend.exception.dto.ErrorResponse;
 
 @RestController
@@ -25,7 +24,6 @@ import ru.example.prodbackend.exception.dto.ErrorResponse;
 public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
-
 
     @Operation(
             summary = "регистрация пользователя",

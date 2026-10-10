@@ -21,6 +21,13 @@ public class UserProfileResponse {
     @Schema(description = "Email пользователя", example = "user@example.com")
     private String email;
 
+    @Schema(description = "Имя пользователя", example = "Иван")
+    private String firstName;
+
+    @Schema(description = "Фамилия пользователя", example = "Иванов")
+    private String lastName;
+
     @Schema(description = "Роль пользователя", example = "USER")
     private UserRole role;
+
 }

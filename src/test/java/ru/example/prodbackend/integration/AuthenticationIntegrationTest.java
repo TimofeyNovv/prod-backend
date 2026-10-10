@@ -43,6 +43,8 @@ class AuthenticationIntegrationTest extends AuthIntegrationTestSupport {
         AuthenticationResponse tokens = registerUser();
         UserEntity user = userRepository.findByEmail(EMAIL).orElseThrow();
 
+        assertEquals("Alice", user.getFirstName());
+        assertEquals("Smith", user.getLastName());
         assertEquals(1L, userRepository.count());
         assertNotEquals(PASSWORD, user.getPassword());
         assertTrue(passwordEncoder.matches(PASSWORD, user.getPassword()));
@@ -66,6 +68,8 @@ class AuthenticationIntegrationTest extends AuthIntegrationTestSupport {
 
         assertErrorResponse(
                 postJson(REGISTER_URL, RegisterRequest.builder()
+                        .firstName("Alice")
+                        .lastName("Smith")
                         .email(EMAIL)
                         .password("AnotherPassword!")
                         .build()),
@@ -152,6 +156,8 @@ class AuthenticationIntegrationTest extends AuthIntegrationTestSupport {
     ) throws Exception {
         assertErrorResponse(
                 postJson(REGISTER_URL, RegisterRequest.builder()
+                        .firstName("Alice")
+                        .lastName("Smith")
                         .email(email)
                         .password(password)
                         .build()),
@@ -214,6 +220,23 @@ class AuthenticationIntegrationTest extends AuthIntegrationTestSupport {
         );
 
         assertDatabaseIsEmpty();
+    }
+
+    @ParameterizedTest
+    @MethodSource("invalidNames")
+    void registrationRejectsInvalidNames(String field, String value) throws Exception {
+        RegisterRequest request = RegisterRequest.builder().email(EMAIL).password(PASSWORD)
+                .firstName("Alice").lastName("Smith").build();
+        if (field.equals("firstName")) request.setFirstName(value);
+        else request.setLastName(value);
+        assertErrorResponse(postJson(REGISTER_URL, request), 422, "VALIDATION_ERROR")
+                .andExpect(jsonPath("$.fieldErrors[*].field", hasItem(field)));
+        assertDatabaseIsEmpty();
+    }
+
+    private static Stream<Arguments> invalidNames() {
+        return Stream.of("firstName", "lastName").flatMap(field ->
+                Stream.of(null, "", "   ", "a".repeat(256)).map(value -> Arguments.of(field, value)));
     }
 
     private static Stream<Arguments> invalidCredentials() {

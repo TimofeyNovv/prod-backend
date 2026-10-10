@@ -33,8 +33,8 @@ public class DataLoader implements ApplicationRunner {
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
-        createUser("admin", adminPassword, UserRole.ADMIN);
-        createUser("user1", user1Password, UserRole.USER);
+        createUser("admin", adminPassword, "Админ", "Админ", UserRole.ADMIN);
+        createUser("user1", user1Password, "Пользователь", "Пользователь", UserRole.USER);
 
         log.info(
                 "Demo data loaded: admin and user1, one refresh session per user"
@@ -44,11 +44,15 @@ public class DataLoader implements ApplicationRunner {
     private void createUser(
             String email,
             String password,
+            String firstName,
+            String lastName,
             UserRole role
     ) {
         UserEntity user = UserEntity.builder()
                 .email(email)
                 .password(passwordEncoder.encode(password))
+                .firstName(firstName)
+                .lastName(lastName)
                 .role(role)
                 .build();
 
