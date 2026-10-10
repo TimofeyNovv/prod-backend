@@ -23,13 +23,11 @@ public class RegisterRequest {
     @Schema(description = "Имя пользователя", example = "Иван")
     @NotBlank(message = "first name is blank")
     @Size(max = 255, message = "first name is too long")
-    @JsonProperty("first_name")
     private String firstName;
 
     @Schema(description = "Фамилия пользователя", example = "Иванов")
     @NotBlank(message = "last name is blank")
     @Size(max = 255, message = "last name is too long")
-    @JsonProperty("last_name")
     private String lastName;
 
 

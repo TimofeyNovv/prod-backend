@@ -17,6 +17,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class SecurityIntegrationTest extends AuthIntegrationTestSupport {
 
@@ -64,9 +66,47 @@ class SecurityIntegrationTest extends AuthIntegrationTestSupport {
         AuthenticationResponse tokens = readTokenPair(mockMvc.perform(post(endpoint)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + signedAccessToken(EMAIL, Instant.EPOCH))
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonMapper.writeValueAsString(Map.of("email", email, "password", PASSWORD, "first_name", "Alice", "last_name", "Smith")))));
+                .content(jsonMapper.writeValueAsString(Map.of(
+                        "email", email,
+                        "password", PASSWORD,
+                        "firstName", "Alice",
+                        "lastName", "Smith"
+                )))));
 
         assertAccessTokenWorks(tokens.getAccessToken());
         assertEquals(2L, refreshTokenRepository.count());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/v3/api-docs", "/v3/api-docs.yaml", "/swagger-ui/index.html",
+            "/js/openapi-to-markdown.js"})
+    void documentationIsAccessibleWithoutAccessToken(String endpoint) throws Exception {
+        mockMvc.perform(get(endpoint)).andExpect(status().isOk());
+        assertDatabaseIsEmpty();
+    }
+
+    @Test
+    void docsRedirectIsAccessibleWithoutAccessToken() throws Exception {
+        mockMvc.perform(get("/docs")).andExpect(status().is3xxRedirection());
+        assertDatabaseIsEmpty();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {REGISTER_URL, AUTHENTICATE_URL, REFRESH_URL, LOGOUT_URL, LOGOUT_ALL_URL})
+    void publicAuthRoutesRequireAuthenticationForGetRequests(String endpoint) throws Exception {
+        assertErrorResponse(mockMvc.perform(get(endpoint)), 401, "UNAUTHORIZED")
+                .andExpect(header().string(HttpHeaders.WWW_AUTHENTICATE, "Bearer"));
+        assertDatabaseIsEmpty();
+    }
+
+    @Test
+    void openApiDescribesUserEndpointsAtTheirNewAddresses() throws Exception {
+        mockMvc.perform(get("/v3/api-docs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.paths['/api/user/me'].get").exists())
+                .andExpect(jsonPath("$.paths['/api/user/me'].patch").exists())
+                .andExpect(jsonPath("$.paths['/api/user/change-password'].post").exists())
+                .andExpect(jsonPath("$.paths['/api/auth/profile']").doesNotExist())
+                .andExpect(jsonPath("$.paths['/api/auth/change-password']").doesNotExist());
     }
 }

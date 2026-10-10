@@ -1,4 +1,4 @@
-package ru.example.prodbackend.auth.dto;
+package ru.example.prodbackend.user.dto;
 
 import lombok.*;
 import jakarta.validation.constraints.*;

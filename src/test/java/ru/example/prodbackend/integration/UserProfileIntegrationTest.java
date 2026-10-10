@@ -107,6 +107,9 @@ class UserProfileIntegrationTest extends AuthIntegrationTestSupport {
                 .andExpect(jsonPath("$", aMapWithSize(5)))
                 .andExpect(jsonPath("$.id").value(user.getId().toString()))
                 .andExpect(jsonPath("$.email").value(user.getEmail()))
-                .andExpect(jsonPath("$.role").value(user.getRole().name()));
+                .andExpect(jsonPath("$.role").value(user.getRole().name()))
+                .andExpect(jsonPath("$.firstName").value(user.getFirstName()))
+                .andExpect(jsonPath("$.lastName").value(user.getLastName()))
+                .andExpect(jsonPath("$.password").doesNotExist());
     }
 }

@@ -6,6 +6,7 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -44,27 +45,51 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) {
         http.csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(req ->
-                        req.requestMatchers("/api/auth/profile", "/api/auth/change-password")
-                                .authenticated()
-                                .requestMatchers("/docs",
-                                        "/api/demo/ping",
-                                        "/api/auth/**",
-                                        "/actuator/health",
-                                        "/actuator/health/readiness",
-                                        "/actuator/health/liveness",
-                                        "/swagger-ui.html",
-                                        "/swagger-ui/**",
-                                        "/v3/api-docs/**",
-                                        "/swagger-resources/**",
-                                        "/js/openapi-to-markdown.js"
-                                )
-                                .permitAll()
-                                .anyRequest()
-                                .authenticated()
+                .authorizeHttpRequests(req -> req
+                        //docs
+                        .requestMatchers(
+                                "/docs",
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs",
+                                "/v3/api-docs/**",
+                                "/v3/api-docs.yaml",
+                                "/swagger-resources/**",
+                                "/js/openapi-to-markdown.js"
+                        ).permitAll()
+
+                        //auth
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/auth/register",
+                                "/api/auth/authenticate",
+                                "/api/auth/refresh",
+                                "/api/auth/logout",
+                                "/api/auth/logout-all"
+                        ).permitAll()
+
+                        //pings
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/demo/ping",
+                                "/actuator/health",
+                                "/actuator/health/readiness",
+                                "/actuator/health/liveness"
+                        ).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/demo/authping")
+                        .authenticated()
+
+                        //user
+                        .requestMatchers(HttpMethod.GET, "/api/user/me")
+                        .authenticated()
+                        .requestMatchers(HttpMethod.PATCH, "/api/user/me")
+                        .authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/user/change-password")
+                        .authenticated()
+
+                        .anyRequest().authenticated()
                 )
                 .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
                 .exceptionHandling(errors -> errors
                         .authenticationEntryPoint((request, response, exception) ->
                                 writeError(
@@ -82,7 +107,11 @@ public class SecurityConfig {
                         )
                 )
                 .authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(
+                        jwtAuthenticationFilter,
+                        UsernamePasswordAuthenticationFilter.class
+                );
+
         return http.build();
     }
 
